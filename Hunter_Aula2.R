@@ -29,6 +29,15 @@ head(df1) # mostra o cabecalho e as primeiras linhas do arquivo
 plot(riqueza~area, data = df1)
 plot(df1$area, df1$riqueza) # escrita alternativa
 
+plot(riqueza~area, data=df1)
+
+#exemplo separando os dados com duas cores
+plot(riqueza~area, data=df1[df1$categoria=='pequeno',],
+     col='red',xlim=c(0,90), ylim=c(10,50))
+points(riqueza~area, data=df1[df1$categoria=='grande',],
+     col='black')
+legend('bottomright',c('pequeno','grande'),col=c('red','black'),pch=c(1,1),ncol=2)
+
 # Especificando outros parâmetros: nome do eixo x (xlab), nome do eixo y (ylab),
   # valores minimas e maximas do eixo x (xlim), titulo principal (main)
 
@@ -38,6 +47,7 @@ plot(riqueza~area, data = df1, xlab="Area (m²)", ylab="Riqueza (# espécies)",
 # Adicionando uma linha de tendência linear
 abline(lm(riqueza~area, data = df1))
 #aqui criei um modelo linear (lm) entre os dois variaveis e mostrei com a funcao abline()
+text(60,60, 'R-2= 0.95', pos=4)
 
 # Criando um boxplot
 # neste case 'categoria' esta um fator
@@ -108,6 +118,7 @@ data(mtcars)
 names(mtcars)
 dim(mtcars)
 head(mtcars)
+tail(mtcars)
 
 # Correlacoes e covariancia
 cor(mtcars, method="spearman")
@@ -157,30 +168,31 @@ sapply(mtcars, sd)
 #### TESTES DE PRESUPOSICOES ESTATISTICAS ####
 
 # Importando base
-df = read.csv("lidar.csv", header=TRUE, sep="")
+#df = read.csv("lidar.csv", header=TRUE, sep="")
+df <- read.csv("flowering_alien_vs_indigen.csv", sep = ";") # o separador pode mudar de computador para computador
 names(df)
 
 #-------------------------------------------------------------
 # Normalidade
 
 # metodo grafico
-qqnorm(df$Volume) #comparando Volume com distribuicao da varianca normal
-qqline(df$Volume) #addicione uma linha representando normalidade perfeita dos dados
+qqnorm(df$Flowering) #comparando Volume com distribuicao da varianca normal
+qqline(df$Flowering) #addicione uma linha representando normalidade perfeita dos dados
 
-#teste de Shapiro -- p < 0.1 apresenta normalidade
-shapiro.test(df$Volume)
+#teste de Shapiro -- p < 0.1 nao e normal
+shapiro.test(df$Flowering)
 
 #teste de Lilliefors
-require(nortest)
-lillie.test(df$Volume) #compara os dados com distribuicao normal via K-S test
+library(nortest)
+lillie.test(df$Flowering) #compara os dados com distribuicao normal via K-S test
 
 
 #-------------------------------------------------------------
 # Homogeneidade de variancia
 
 # Teste de Breusch-Pagan-Godfrey
-require(lmtest)
-bptest(Volume ~ Height, data=df) #p-val > 0.05 HETEROSKEDASTICIDADE NAO SIGNIFICATIVA
+library(lmtest)
+bptest(mpg ~ cyl, data=mtcars) #p-val > 0.05 HETEROSKEDASTICIDADE NAO SIGNIFICATIVA
 
 #### TESTES DOS HIPOTESES ####
 
@@ -193,17 +205,20 @@ head(df)
 names(df)
 
 # explorando a distribuição graficamente.
-require(ggplot2)
+library(ggplot2)
 ggplot(df, aes(Flowering)) + geom_histogram() + facet_wrap(~Status, nrow = 2, ncol = 1)
 
-# e pelo teste Chi-quadrado.
+# e pelo teste Qui-quadrado.
 m <- table(df$Status, df$Flowering)
 
-(Xsq <- chisq.test(m)) # Resumo do teste
+Xsq <- chisq.test(m) # Resumo do teste
 Xsq$observed # Valores observados (o mesmo que matriz m)
 Xsq$expected # Valores esperados segundo hipótese nula
 Xsq$residuals # Resíduos de Pearson
 Xsq$stdres # Resíduos padronizados
+
+matplot(Xsq$observed, Xsq$expected)
+abline(a=0,b=1)
 
 #### TESTE KOLMOGOROV-SMIRNOV ####
 # explorando a distribuição graficamente.
@@ -224,8 +239,9 @@ var.test(x, y)                  # Tem a mesma varianca?
 
 #### TESTE T ####
 
-data(sleep)
-summary(sleep)
+#data(sleep)
+#summary(sleep)
 
-t.test(extra ~ group, data = sleep)
+
+t.test(Flowering ~ Status, data = df)
 
